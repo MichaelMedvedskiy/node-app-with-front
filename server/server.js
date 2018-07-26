@@ -8,7 +8,7 @@ const express = require('express');
 const port = process.env.PORT || 3000;
 
 
-const {generateMessage} =require('./utils/message.js');
+const {generateMessage, generateLocationMessage} =require('./utils/message.js');
 
 console.log(__dirname+'/../public');
 
@@ -63,6 +63,12 @@ console.log('Got message from user on server: ', message);
     triggerAcknoledgementForCounterpartSocket('this is from the server');
 
   });
+
+socket.on('createLocationMessage', (coords,triggerAcknoledgementForCounterpartSocket)=>{
+  io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
+  triggerAcknoledgementForCounterpartSocket('zevs');
+});
+
 
 
 

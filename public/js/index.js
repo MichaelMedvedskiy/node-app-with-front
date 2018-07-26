@@ -20,6 +20,19 @@ socket.on('newMessage', function(dataGotten){
 });
 
 
+socket.on('newLocationMessage',function(message){
+  var li = jQuery('<li></li>');
+  var a = jQuery('<a target="_blank">Я сейчас сдесь</a>');
+  li.text(`${message.from} : `);
+  a.attr('href', message.url);
+  li.append(a);
+  jQuery('#messages').append(li);
+
+});
+
+
+
+
 // socket.on('typeMessageFromAdmin', function(adminMessage){
 //     console.log("The ADMIN SAYS: ", adminMessage.text);
 // });
@@ -39,6 +52,34 @@ jQuery('#messageForm').on('submit',function(e){
     text: jQuery('[name=message]').val()
   },function(text){
     console.log(text);
+    jQuery('[name=message]').val('');
+
   });
-  jQuery('[name=message]').val('');
+
+});
+
+
+var locationButton = jQuery('#send-location');
+
+locationButton.on('click',function(){
+  if(!navigator.geolocation){
+    return alert('Geolocation is not supported by your browser');
+  }
+  locationButton.attr('disabled', 'disabled').text('Sending your personal data');
+
+  navigator.geolocation.getCurrentPosition(function(position){
+
+  //  console.log(position);
+  socket.emit('createLocationMessage',{
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude
+  },function(text){
+    locationButton.removeAttr('disabled').text('Send location');
+    console.log(text);
+  });
+
+  },function(){
+    alert('Unable to fetch the location');
+    locationButton.removeAttr('disabled').text('Send location');
+  });
 });
