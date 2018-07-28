@@ -27,6 +27,7 @@ io.on('connection', (socket)=>{
 console.log('New user connected');
 socket.on('join',(params,callback)=>{
 
+
   if(!(isRealString(params.name) && isRealString(params.room))){
     return callback('Напиши валидные имя и имя хаты');
   }
@@ -89,7 +90,12 @@ console.log('Got message from user on server: ', message);
 var user = users.getUser(socket.id);
 
 //Sending info to all connections
+
+
+if(user){
   io.to(user.room).emit('newMessage',generateMessage(user.name,message.text));
+}
+
 //Sending info to all but one socket
     // socket.broadcast.emit('newMessage',{
     //   from: message.from,
@@ -104,8 +110,11 @@ var user = users.getUser(socket.id);
 socket.on('createLocationMessage', (coords,triggerAcknoledgementForCounterpartSocket)=>{
 
   var user = users.getUser(socket.id);
+  if(user){
 
-  io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+    io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+  }
+
   triggerAcknoledgementForCounterpartSocket('zevs');
 });
 

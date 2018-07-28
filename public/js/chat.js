@@ -3,6 +3,9 @@ var socket = io();
 socket.on('connect',function(){
     console.log('connected to server');
     var params = jQuery.deparam(window.location.search);
+    //adding the room name
+    var h1  =  jQuery('<h1></h1>').text(params.room).addClass('roomName');
+    jQuery('.chat__sidebar').prepend(h1);
 
     socket.emit('join', params,function(err){
       if(err){
@@ -75,7 +78,7 @@ socket.on('newMessage', function(dataGotten){
 socket.on('newLocationMessage',function(message){
   console.log('A location was sent: ', message);
   var formattedTime = moment(message.createdAt).format('h:mm a');
-  //var htmlTemplate = jQuery('#location_message_template').html();
+  var htmlTemplate = jQuery('#location_message_template').html();
   //var htmlTemplate = '{{from}} {{createdAt}} {{url}}'
   var readyUpHTML = Mustache.render(htmlTemplate,{
     from: message.from,
@@ -113,7 +116,7 @@ socket.on('newLocationMessage',function(message){
 jQuery('#messageForm').on('submit',function(e){
   e.preventDefault();
   socket.emit('createMessage',{
-    from: jQuery('[name=sender]').val(),
+
     text: jQuery('[name=message]').val()
   },function(text){
     console.log(text);
