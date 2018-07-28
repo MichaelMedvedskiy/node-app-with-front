@@ -1,9 +1,10 @@
 const path = require('path');
 const http = require('http');
 const publicPath = path.join(__dirname, './../public');
-
+const {isRealString} = require('./utils/validation.js');
 const socketIO = require('socket.io');
 
+const {Users} = require('./utils/users');
 const express = require('express');
 const port = process.env.PORT || 3000;
 
@@ -19,13 +20,35 @@ app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
 
+
+var users = new Users();
+
 io.on('connection', (socket)=>{
 console.log('New user connected');
+socket.on('join',(params,callback)=>{
+
+  if(!(isRealString(params.name) && isRealString(params.room))){
+    return callback('Напиши валидные имя и имя хаты');
+  }
+  console.log(params.room);
 
 
-socket.emit('newMessage',generateMessage('Admin','Greetings! Welcome to my board!'));
+  socket.join(params.room);
+  users.removeUser(socket.id);
+  console.log(socket.id);
+  users.addUser(socket.id, params.name,params.room);
 
-socket.broadcast.emit('newMessage',generateMessage('Admin', 'Another user joined the crue!'));
+  io.to(params.room).emit('updateUserList',users.getUserList(params.room));
+  socket.emit('newMessage',generateMessage('Admin','Greetings! Welcome to my board!'));
+
+  socket.broadcast.to(params.room).emit('newMessage',generateMessage('Admin', `${params.name} joined the crue!`));
+
+
+
+  callback();
+});
+
+
 
 
 // socket.emit('typeMessageFromAdmin',{
@@ -42,6 +65,20 @@ socket.broadcast.emit('newMessage',generateMessage('Admin', 'Another user joined
 
 socket.on('disconnect',()=>{
     console.log('User disconnected');
+    //socket.broadcast.to(params.room).emit('userLeft',params.name);
+
+    var userThatLeft = users.removeUser(socket.id);
+    if(userThatLeft){
+
+      console.log('The room that was left: ',userThatLeft.name);
+        socket.broadcast.to(userThatLeft.room).emit('newMessage',{
+                from: 'Admin',
+                text:`${userThatLeft.name} left the chat.`
+              });
+
+              io.to(userThatLeft.room).emit('updateUserList',users.getUserList(userThatLeft.room));
+            }
+
 });
 
 socket.on('createMessage',(message,triggerAcknoledgementForCounterpartSocket)=>{
