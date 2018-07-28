@@ -86,10 +86,10 @@ socket.on('createMessage',(message,triggerAcknoledgementForCounterpartSocket)=>{
 console.log('Got message from user on server: ', message);
 
 
-
+var user = users.getUser(socket.id);
 
 //Sending info to all connections
-  io.emit('newMessage',generateMessage(message.from,message.text));
+  io.to(user.room).emit('newMessage',generateMessage(user.name,message.text));
 //Sending info to all but one socket
     // socket.broadcast.emit('newMessage',{
     //   from: message.from,
@@ -102,7 +102,10 @@ console.log('Got message from user on server: ', message);
   });
 
 socket.on('createLocationMessage', (coords,triggerAcknoledgementForCounterpartSocket)=>{
-  io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
+
+  var user = users.getUser(socket.id);
+
+  io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
   triggerAcknoledgementForCounterpartSocket('zevs');
 });
 
